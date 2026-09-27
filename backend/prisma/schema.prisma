@@ -23,8 +23,7 @@ model Product {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  cartItems  CartItem[]
-  orderItems OrderItem[]
+  cartItems CartItem[]
 
   @@index([category])
   @@index([brand])
@@ -69,14 +68,18 @@ model Order {
   updatedAt       DateTime    @updatedAt
 }
 
+// productId/productName are a snapshot, not a foreign key: the checkout flow accepts cart
+// lines directly from the client (see structural note in checkoutService.ts) rather than
+// resolving a server-side cart, so an order should never fail because the catalog it was
+// placed against has since changed.
 model OrderItem {
-  id        String  @id @default(cuid())
-  orderId   String
-  order     Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
-  productId String
-  product   Product @relation(fields: [productId], references: [id])
-  quantity  Int
-  price     Float // price at time of order
+  id          String @id @default(cuid())
+  orderId     String
+  order       Order  @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  productId   String
+  productName String
+  quantity    Int
+  price       Float // price at time of order
 }
 
 model Conversation {

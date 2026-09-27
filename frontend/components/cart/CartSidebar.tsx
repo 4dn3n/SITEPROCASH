@@ -1,10 +1,10 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { Minus, Plus, X } from "lucide-react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
-import { ProductTile } from "@/components/products/ProductTile";
 import { useCartStore } from "@/store/cartStore";
 
 const formatPrice = (n: number) =>
@@ -39,7 +39,15 @@ export function CartSidebar() {
             <div className="flex-1 space-y-6 overflow-y-auto pr-1">
               {lines.map((line) => (
                 <div key={line.product.id} className="flex gap-4">
-                  <ProductTile category={line.product.category} className="h-20 w-20 shrink-0" />
+                  <div className="relative h-20 w-20 shrink-0 overflow-hidden rounded-xl">
+                    <Image
+                      src={line.product.image}
+                      alt={line.product.name}
+                      fill
+                      sizes="80px"
+                      className="object-cover"
+                    />
+                  </div>
                   <div className="flex flex-1 flex-col gap-1">
                     <div className="flex items-start justify-between gap-2">
                       <p className="text-sm font-medium leading-snug">{line.product.name}</p>

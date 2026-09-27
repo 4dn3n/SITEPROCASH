@@ -1,8 +1,8 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { Minus, Plus, X } from "lucide-react";
-import { ProductTile } from "@/components/products/ProductTile";
 import { useCartStore } from "@/store/cartStore";
 
 const formatPrice = (n: number) =>
@@ -29,7 +29,15 @@ export function CartTable() {
           <tr key={line.product.id} className="border-b border-border/60">
             <td className="py-4">
               <div className="flex items-center gap-4">
-                <ProductTile category={line.product.category} className="h-16 w-16 shrink-0" />
+                <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-xl">
+                  <Image
+                    src={line.product.image}
+                    alt={line.product.name}
+                    fill
+                    sizes="64px"
+                    className="object-cover"
+                  />
+                </div>
                 <Link
                   href={`/products/${line.product.id}`}
                   className="font-medium hover:text-accent"

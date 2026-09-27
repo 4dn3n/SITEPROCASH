@@ -1,9 +1,9 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
 import { notFound } from "next/navigation";
 import { useProduct } from "@/hooks/useProducts";
-import { ProductTile } from "@/components/products/ProductTile";
 import { SpecsTable } from "@/components/product-detail/SpecsTable";
 import { QuantitySelector } from "@/components/product-detail/QuantitySelector";
 import { ShareButtons } from "@/components/product-detail/ShareButtons";
@@ -28,7 +28,16 @@ export default function ProductDetailPage({ params }: { params: { id: string } }
   return (
     <main className="mx-auto max-w-6xl px-6 py-16">
       <div className="grid grid-cols-1 gap-12 lg:grid-cols-2">
-        <ProductTile category={product.category} className="aspect-square w-full" iconClassName="h-1/4 w-1/4" />
+        <div className="relative aspect-square w-full overflow-hidden rounded-2xl">
+          <Image
+            src={product.image}
+            alt={product.name}
+            fill
+            priority
+            sizes="(min-width: 1024px) 50vw, 100vw"
+            className="object-cover"
+          />
+        </div>
 
         <div className="flex flex-col gap-6">
           <div>

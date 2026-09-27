@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import Image from "next/image";
 import { useRouter, useSearchParams } from "next/navigation";
 import { SlidersHorizontal } from "lucide-react";
 import { useProducts } from "@/hooks/useProducts";
@@ -72,29 +73,43 @@ export function ProductsPageContent() {
       : "Équipements par Type de Restaurant";
 
   return (
-    <main className="mx-auto max-w-7xl px-6 py-12">
-      <div className="max-w-2xl">
-        {!showResults ? (
-          <>
-            <h1 className="accent-bar font-display text-4xl font-semibold sm:text-5xl">
-              {heading}
-            </h1>
-            <p className="mt-6 text-primary/60">
-              Trouvez les solutions adaptées à votre concept.
-            </p>
-          </>
-        ) : (
-          <Breadcrumb
-            items={[
-              { label: "Accueil", href: "/" },
-              { label: "Catalogue", onClick: resetToCategories },
-              ...(category ? [{ label: category.name }] : [{ label: `« ${search} »` }]),
-            ]}
-          />
-        )}
-      </div>
+    <main>
+      <section className="relative flex min-h-[38vh] items-end overflow-hidden bg-primary px-6 py-12 sm:px-12">
+        <Image
+          src="/images/background-image.png"
+          alt=""
+          fill
+          priority
+          sizes="100vw"
+          className="object-cover"
+        />
+        <div className="absolute inset-0 bg-primary/60" />
 
-      <div className="sticky top-[73px] z-30 -mx-6 mt-8 border-y border-border/60 bg-bg-light/95 px-6 py-4 backdrop-blur-sm">
+        <div className="relative z-10 mx-auto w-full max-w-7xl">
+          {!showResults ? (
+            <>
+              <h1 className="accent-bar font-display text-4xl font-semibold text-text-dark sm:text-5xl">
+                {heading}
+              </h1>
+              <p className="mt-6 max-w-2xl text-text-dark/70">
+                Trouvez les solutions adaptées à votre concept.
+              </p>
+            </>
+          ) : (
+            <Breadcrumb
+              variant="dark"
+              items={[
+                { label: "Accueil", href: "/" },
+                { label: "Catalogue", onClick: resetToCategories },
+                ...(category ? [{ label: category.name }] : [{ label: `« ${search} »` }]),
+              ]}
+            />
+          )}
+        </div>
+      </section>
+
+      <div className="mx-auto max-w-7xl px-6 py-12">
+      <div className="sticky top-[73px] z-30 -mx-6 border-y border-border/60 bg-bg-light/95 px-6 py-4 backdrop-blur-sm">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex-1 sm:max-w-sm">
             <SearchBar value={search} onChange={updateSearch} />
@@ -153,6 +168,7 @@ export function ProductsPageContent() {
           </div>
         </>
       )}
+      </div>
     </main>
   );
 }

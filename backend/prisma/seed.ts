@@ -2,8 +2,35 @@ import { PrismaClient } from "@prisma/client";
 
 const prisma = new PrismaClient();
 
-function img(seed: string, n = 3) {
-  return Array.from({ length: n }, (_, i) => `https://picsum.photos/seed/${seed}-${i}/900/900`);
+function slugify(value: string) {
+  return value
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[̀-ͯ]/g, "")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/(^-|-$)/g, "");
+}
+
+/**
+ * Local generated tile image per equipment category (see
+ * frontend/scripts/generate-placeholder-images.mjs, served from frontend/public) — no
+ * per-product photography exists, so every product in a category shares that category's image.
+ */
+function categoryImage(category: string) {
+  const slug = slugify(category);
+  return `/images/products/${slug}/${slug}.jpg`;
+}
+
+/** Real product photos (see frontend/public/images/products), keyed by exact product name. */
+const PRODUCT_IMAGE_OVERRIDES: Record<string, string> = {
+  "Plaque de cuisson gaz 4 feux": "/images/products/cuisson/plaque-de-cuisson-gaz.jpg",
+  "Friteuse professionnelle 10L": "/images/products/cuisson/friteuse.jpg",
+  "Réfrigérateur professionnel 600L": "/images/products/froid/refrigerateur-600l.jpg",
+  "Table de travail inox 200cm": "/images/products/stockage/table-travail-inox.jpg",
+};
+
+function productImage(p: { name: string; category: string }) {
+  return PRODUCT_IMAGE_OVERRIDES[p.name] ?? categoryImage(p.category);
 }
 
 const products = [
@@ -352,12 +379,11 @@ async function main() {
   await prisma.product.deleteMany();
 
   for (const p of products) {
-    const seed = p.name.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/[^a-z0-9]+/g, "-");
     await prisma.product.create({
       data: {
         ...p,
-        image: img(seed, 1)[0],
-        images: img(seed, 4),
+        image: productImage(p),
+        images: [productImage(p)],
       },
     });
   }

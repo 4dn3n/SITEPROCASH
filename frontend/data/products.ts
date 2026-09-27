@@ -9,8 +9,30 @@ function slugify(name: string) {
     .replace(/(^-|-$)/g, "");
 }
 
-function img(seed: string, n = 4) {
-  return Array.from({ length: n }, (_, i) => `https://picsum.photos/seed/${seed}-${i}/900/900`);
+/**
+ * Fallback: a generated tile image per equipment category (see
+ * scripts/generate-placeholder-images.mjs), used for any product that doesn't have a real
+ * photo below in PRODUCT_IMAGE_OVERRIDES.
+ */
+function categoryImage(category: string) {
+  const slug = slugify(category);
+  return `/images/products/${slug}/${slug}.jpg`;
+}
+
+/** Real product photos, keyed by exact product name — everything else falls back to categoryImage(). */
+const PRODUCT_IMAGE_OVERRIDES: Record<string, string> = {
+  "Plaque de cuisson gaz 4 feux": "/images/products/cuisson/plaque-de-cuisson-gaz.jpg",
+  "Friteuse professionnelle 10L": "/images/products/cuisson/friteuse.jpg",
+  "Four à pizza électrique 6 pizzas": "/images/products/cuisson/pizza-oven-1.jpg",
+  "Four professionnel convection 10 niveaux": "/images/products/cuisson/four-convection-10-niveaux.jpg",
+  "Réfrigérateur professionnel 600L": "/images/products/froid/refrigerateur-600l.jpg",
+  "Réfrigérateur vitré boissons": "/images/products/froid/refrigerateur-vitre-boissons.jpg",
+  "Table de travail inox 200cm": "/images/products/stockage/table-travail-inox.jpg",
+  "Rayonnage mobile 5 niveaux": "/images/products/stockage/rayonnage-mobile.jpg",
+};
+
+function productImage(p: Pick<RawProduct, "name" | "category">) {
+  return PRODUCT_IMAGE_OVERRIDES[p.name] ?? categoryImage(p.category);
 }
 
 type RawProduct = Omit<Product, "id" | "image" | "images" | "createdAt" | "updatedAt">;
@@ -927,8 +949,8 @@ export const PRODUCTS: Product[] = raw.map((p, i) => {
   return {
     ...p,
     id: seed,
-    image: img(seed, 1)[0],
-    images: img(seed, 4),
+    image: productImage(p),
+    images: [productImage(p)],
     createdAt: new Date(new Date(BASE_DATE).getTime() + i * 86_400_000).toISOString(),
     updatedAt: BASE_DATE,
   };

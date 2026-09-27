@@ -1,6 +1,5 @@
 import { prisma } from "../lib/prisma.js";
-import { stripe } from "../lib/stripe.js";
-import { ApiError } from "../middleware/errorHandler.js";
+import { createPaymentIntent } from "./stripeService.js";
 import type { CreateCheckoutSessionInput } from "../schemas/checkout.schema.js";
 
 const TAX_RATE = 0.2;
@@ -20,31 +19,26 @@ function generateOrderNumber() {
   return `CMD-${year}-${suffix}`;
 }
 
+/**
+ * Structural note: the frontend cart is client-side only (Zustand + localStorage, no server
+ * Cart table in use — see frontend/store/cartStore.ts), so checkout receives the cart lines
+ * directly in the request body instead of resolving a server-side cart by session. Totals are
+ * computed from the client-supplied prices; OrderItem stores a productId/productName snapshot
+ * rather than a foreign key to Product (see schema.prisma), since the frontend's local product
+ * catalog and the backend's seeded one aren't guaranteed to share IDs.
+ */
 export async function createCheckoutSession(
   sessionId: string,
   input: CreateCheckoutSessionInput,
 ) {
-  const cart = await prisma.cart.findUnique({
-    where: { sessionId },
-    include: { items: { include: { product: true } } },
-  });
-
-  if (!cart || cart.items.length === 0) {
-    throw new ApiError(400, "Le panier est vide");
-  }
-
-  const subtotal = cart.items.reduce(
-    (sum, item) => sum + item.quantity * item.product.price,
-    0,
-  );
+  const subtotal = input.items.reduce((sum, item) => sum + item.quantity * item.price, 0);
   const { shipping, taxes, totalAmount } = computeTotals(subtotal);
   const orderNumber = generateOrderNumber();
 
-  const paymentIntent = await stripe.paymentIntents.create({
-    amount: Math.round(totalAmount * 100),
+  const paymentIntent = await createPaymentIntent({
+    amountCents: Math.round(totalAmount * 100),
     currency: "eur",
-    automatic_payment_methods: { enabled: true },
-    receipt_email: input.customerEmail,
+    receiptEmail: input.customerEmail,
     metadata: { orderNumber },
   });
 
@@ -63,10 +57,11 @@ export async function createCheckoutSession(
       status: "pending",
       stripeSessionId: paymentIntent.id,
       items: {
-        create: cart.items.map((item) => ({
+        create: input.items.map((item) => ({
           productId: item.productId,
+          productName: item.name,
           quantity: item.quantity,
-          price: item.product.price,
+          price: item.price,
         })),
       },
     },
